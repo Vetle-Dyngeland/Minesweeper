@@ -1,4 +1,5 @@
 ﻿using Apos.Camera;
+using MonoGame.Extended.Screens;
 
 namespace Minesweeper.Managers
 {
@@ -9,6 +10,8 @@ namespace Minesweeper.Managers
 
         public List<Texture2D> spriteSheets = new();
         public int tileSize = 48;
+
+        private UIManager uiManager;
 
         public ICondition revealTileCondition = new MouseCondition(MouseButton.LeftButton);
         public ICondition flagTileCondition = new MouseCondition(MouseButton.RightButton);
@@ -42,15 +45,15 @@ namespace Minesweeper.Managers
             this.screenSize = screenSize;
             this.camera = camera;
 
-            boardSize = new(20, 20);
-            mineCount = 128;
+            boardSize = screenSize / tileSize + Vector2.One;
+            mineCount = (int)((boardSize.X * boardSize.Y) / 3.75f);
         }
 
         public void LoadContent(ContentManager content)
         {
             LoadTexture(content, spriteSheets, "tiles");
 
-            CreateClasses();
+            CreateClasses(content);
             NewGame();
         }
 
@@ -59,11 +62,13 @@ namespace Minesweeper.Managers
             textureList.Add(content.Load<Texture2D>("Sprites/" + name));
         }
 
-        private void CreateClasses()
+        private void CreateClasses(ContentManager content)
         {
             board = new(spriteSheets[0], tileSize, 16, mineCount) {
                 width = (int)boardSize.X, height = (int)boardSize.Y,
             };
+
+            uiManager = new(screenSize, camera, content);
         }
 
         private void NewGame()
@@ -76,6 +81,7 @@ namespace Minesweeper.Managers
         {;
             UpdateInput();
             UpdateCamera(deltaTime);
+            uiManager.Update();
 
             board.Regenerate();
         }
@@ -153,16 +159,46 @@ namespace Minesweeper.Managers
             if(scrollWheelDelta != 0) {
                 Vector2 prevMousePos = camera.ScreenToWorld(InputHelper.NewMouse.Position.ToVector2());
                 float prevScale = camera.Scale.X;
+
                 camera.Scale += Vector2.One * scrollWheelDelta / 10000 * zoomSpeed;
                 if(camera.Scale.X <= 0) camera.Scale = Vector2.One * prevScale;
+
                 camera.XY += prevMousePos - camera.ScreenToWorld(InputHelper.NewMouse.Position.ToVector2());
             }
-            
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
             board.Draw(spriteBatch);
+            uiManager.Draw(spriteBatch);
+        }
+    }
+
+    public class UIManager
+    {
+        private readonly Vector2 screenSize;
+        private readonly Texture2D whitePixel;
+        private readonly List<Texture2D> textures = new();
+        private readonly Camera camera;
+
+        public UIManager(Vector2 screenSize, Camera camera, ContentManager content)
+        {
+            this.screenSize = screenSize;
+            this.camera = camera;
+
+            textures.Add(content.Load<Texture2D>("Sprites/Smilies"));
+            whitePixel = content.Load<Texture2D>("Sprites/whitePixel");
+        }
+
+        public void Update()
+        {
+
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            Rectangle headerRect = new((int)(camera.X - screenSize.X / 2), (int)(camera.Y - screenSize.Y / 2), (int)screenSize.X, (int)(screenSize.Y / 10));
+            spriteBatch.Draw(whitePixel, headerRect, new Color(192, 192, 192, 255));
         }
     }
 }

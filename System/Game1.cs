@@ -7,13 +7,13 @@ namespace Minesweeper.System
         private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
-        private Vector2 screenSize = new(1600, 900);
-        private readonly bool isFullScreen = false;
+        private Vector2 screenSize = new(1920, 1080);
+        private readonly bool isFullScreen = true;
 
         private GameManager gameManager;
 
-        IVirtualViewport defaultViewport;
-        Camera camera;
+        private IVirtualViewport defaultViewport;
+        private Camera camera;
 
         public Game1()
         {
@@ -78,10 +78,10 @@ namespace Minesweeper.System
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(new Color(132, 132, 132, 255));
 
             camera.SetViewport();
-            spriteBatch.Begin(transformMatrix: camera.View);
+            spriteBatch.Begin(transformMatrix: camera.View, samplerState: SamplerState.PointClamp);
 
             gameManager.Draw(spriteBatch);
 
