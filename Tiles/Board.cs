@@ -10,9 +10,6 @@
         public int tileSize;
         private readonly Texture2D tileSheet;
 
-        public ICondition chordCondition = new AllCondition(
-            new MouseCondition(MouseButton.LeftButton), new MouseCondition(MouseButton.RightButton));
-
         public Board(Texture2D tileSheet, int tileSize, int tileSizeOrgin, int bombAmount = default)
         {
             this.tileSheet = tileSheet;
@@ -110,7 +107,7 @@
             return new(new(xStep * tileSizeOrgin, 0), new(tileSizeOrgin, tileSizeOrgin));
         }
 
-        private int GetRevealedTileXStep(Tile tile)
+        private static int GetRevealedTileXStep(Tile tile)
         {
             int xStep = 0;
             switch(tile.type) {
@@ -129,13 +126,13 @@
             return xStep;
         }
 
-        private int GetNumberTileXStep(Tile tile)
+        private static int GetNumberTileXStep(Tile tile)
         {
             int numberOffset = 7;
             return numberOffset + tile.number;
         }
 
-        private int GetHiddenTileXStep(Tile tile)
+        private static int GetHiddenTileXStep(Tile tile)
         {
             if(tile.flagged) return 2;
             if(tile.questioned) return 3;
@@ -216,7 +213,7 @@
             tiles[x, y].flagged = !tiles[x, y].flagged;
         }
 
-        private void ChordAt(int x, int y)
+        public void ChordAt(int x, int y)
         {
             int count = 0;
             for(int xOffset = -1; xOffset < 2; xOffset++) {
@@ -233,14 +230,6 @@
             else RevealTilesAround(x, y, true);
         }
         #endregion Interaction
-
-        public void Update()
-        {
-            if(chordCondition.Pressed()) {
-                int[] position = PositionToTile(InputHelper.NewMouse.Position.ToVector2());
-                ChordAt(position[0], position[1]);
-            }
-        }
 
         public void Draw(SpriteBatch spriteBatch)
         {

@@ -1,4 +1,6 @@
-﻿namespace Minesweeper.System
+﻿using Apos.Camera;
+
+namespace Minesweeper.System
 {
     public class Game1 : Game
     {
@@ -9,6 +11,9 @@
         private readonly bool isFullScreen = false;
 
         private GameManager gameManager;
+
+        IVirtualViewport defaultViewport;
+        Camera camera;
 
         public Game1()
         {
@@ -43,13 +48,18 @@
 
         private void CreateClasses()
         {
-            gameManager = new(screenSize);
+            defaultViewport = new DefaultViewport(GraphicsDevice, Window);
+            camera = new(defaultViewport) {
+                XY = screenSize / 2
+            };
+
+            gameManager = new(screenSize, camera);
         }
 
         protected override void LoadContent()
         {
             InputHelper.Setup(this);
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            spriteBatch = new(GraphicsDevice);
 
             gameManager.LoadContent(Content);
         }
@@ -57,10 +67,10 @@
         protected override void Update(GameTime gameTime)
         {
             InputHelper.UpdateSetup();
-            if(GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if(InputHelper.NewKeyboard.IsKeyDown(Keys.Escape))
                 Exit();
 
-            gameManager.Update();
+            gameManager.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
             base.Update(gameTime);
             InputHelper.UpdateCleanup();
@@ -70,11 +80,13 @@
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            spriteBatch.Begin();
+            camera.SetViewport();
+            spriteBatch.Begin(transformMatrix: camera.View);
 
             gameManager.Draw(spriteBatch);
 
             spriteBatch.End();
+            camera.ResetViewport();
 
             base.Draw(gameTime);
         }
